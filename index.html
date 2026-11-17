@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101525"><title>Balkan Karaoke</title>
+<style>
+:root{--bg:#101525;--panel:#1a2338;--panel2:#222e47;--text:#f5f7fb;--muted:#aab5ca;--accent:#f4bd55;--line:#34415d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0%,#293653 0,#101525 42%);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+button,input,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:11px 15px;background:var(--accent);color:#1b2030;font-weight:750}
+button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}button.active{background:var(--accent);color:#1b2030;border-color:var(--accent)}
+header{padding:20px clamp(16px,4vw,48px);display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid #ffffff18}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#e78c69);display:grid;place-items:center;color:#182033;font-size:23px;font-weight:900}.brand h1{font-size:20px;margin:0}.brand p{margin:2px 0 0;color:var(--muted);font-size:12px}
+main{max-width:1280px;margin:auto;padding:28px clamp(16px,4vw,48px) 60px}.hero{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:24px}.eyebrow{color:var(--accent);text-transform:uppercase;letter-spacing:2px;font-size:11px;font-weight:800}.hero h2{font-size:clamp(28px,5vw,44px);line-height:1.08;margin:8px 0}.hero p{color:var(--muted);margin:0;max-width:680px}
+.layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(340px,.95fr);gap:18px}.panel{background:linear-gradient(160deg,#202b43,#182137);border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 18px 50px #0002}
+.panel h3{margin:0 0 14px;font-size:17px}.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin:10px 0}.search{flex:1;min-width:160px;background:#10182a;border:1px solid var(--line);border-radius:12px;padding:11px 13px;color:var(--text)}
+.songlist{display:flex;flex-direction:column;gap:8px;max-height:530px;overflow:auto}.song{display:flex;align-items:center;gap:11px;padding:11px;border-radius:14px;background:#111a2c;border:1px solid transparent}.song.active{border-color:var(--accent);background:#29334a}.disc{width:40px;height:40px;flex:0 0 40px;border-radius:12px;background:#303d58;display:grid;place-items:center}.songinfo{flex:1;min-width:0}.songinfo strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.songinfo small{color:var(--muted)}.song button{padding:8px 11px}.empty{padding:25px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+.now{min-height:105px;border-radius:16px;background:linear-gradient(135deg,#394663,#252f48);display:flex;align-items:center;justify-content:center;text-align:center;padding:18px}.now h3{font-size:22px;margin:5px 0}.now p{color:#d0d8e7;margin:0}
+audio{width:100%;height:42px;filter:invert(.88) hue-rotate(180deg)}.modebar{display:flex;gap:10px;justify-content:center}.modebar button{flex:1}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px}.control{background:#111a2c;border:1px solid var(--line);border-radius:14px;padding:12px}.control label{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:8px}.control input{width:100%;accent-color:var(--accent)}
+.lyrics{min-height:190px;max-height:300px;overflow:auto;background:#0d1423;border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center;white-space:pre-wrap;color:#e9edf5;font-size:19px}.lyrics .current{color:var(--accent);font-weight:900;font-size:1.2em}
+textarea{width:100%;min-height:105px;resize:vertical;background:#10182a;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px}.small{font-size:12px;color:var(--muted)}.sectionhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.status{font-size:12px;color:var(--muted);margin-top:8px}.tag{font-size:10px;border:1px solid var(--line);border-radius:99px;padding:3px 7px;color:var(--muted);white-space:nowrap}
+footer{padding:0 20px 28px;text-align:center;color:var(--muted);font-size:12px}
+.tv header,.tv .library,.tv .hero{display:none}.tv main{max-width:none;padding:2vh 3vw}.tv .layout{display:block}.tv .now{min-height:12vh}.tv .now h3{font-size:clamp(28px,4vw,56px)}.tv .lyrics{max-height:55vh;min-height:42vh;font-size:clamp(24px,4vw,54px);line-height:1.5}.tv .modebar,.tv .controls,.tv .editlyrics,.tv .pitchnote{display:none}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.hero{align-items:start;flex-direction:column}}@media(max-width:520px){header{padding:14px}.panel{padding:15px}.controls{grid-template-columns:1fr}.hero h2{font-size:32px}.song{gap:8px}}
+</style></head>
+<body>
+<header><div class="brand"><div class="logo">♫</div><div><h1>BALKAN KARAOKE</h1><p>Tvoja muzika. Tvoj glas. Tvoj tonalitet.</p></div></div><button class="secondary" id="tvBtn">▣ TV režim</button></header>
+<main>
+<section class="hero"><div><div class="eyebrow">Privatna karaoke biblioteka</div><h2>Veče je za pevanje.</h2><p>Dodaj originalne i instrumentalne snimke. Biblioteka i tekstovi ostaju sačuvani u ovom pregledaču na ovom uređaju.</p></div>
+<div class="toolbar"><button id="addInst">＋ Instrumentali</button><button class="secondary" id="addOrig">＋ Originali</button><input id="instFiles" type="file" accept="audio/*" multiple hidden><input id="origFiles" type="file" accept="audio/*" multiple hidden></div></section>
+<div class="layout">
+<section class="panel library"><div class="sectionhead"><h3>Moja biblioteka</h3><span class="small" id="count">0 pesama</span></div><div class="toolbar"><input class="search" id="search" placeholder="Pretraži pesmu ili izvođača…"><button class="secondary" id="clearBtn">Obriši sve</button></div><div class="songlist" id="songlist"><div class="empty">Biblioteka je prazna.<br>Dodaj instrumentalne i/ili originalne fajlove.</div></div><p class="status" id="dbStatus">Provera lokalne biblioteke…</p></section>
+<section class="panel player"><div class="now"><div><div class="eyebrow">Sada se peva</div><h3 id="title">Izaberi pesmu</h3><p id="artist">Balkan Karaoke</p></div></div>
+<div class="modebar"><button id="karaokeMode" class="active">♫ KARAOKE</button><button id="originalMode" class="secondary">🎤 ORIGINAL</button></div>
+<audio id="audio" controls></audio>
+<div class="controls"><div class="control"><label><span>Jačina zvuka</span><b id="volVal">85%</b></label><input id="volume" type="range" min="0" max="100" value="85"></div><div class="control"><label><span>Brzina reprodukcije</span><b id="speedVal">100%</b></label><input id="speed" type="range" min="85" max="115" value="100"></div></div>
+<div class="control pitchnote"><label><span>Promena tonaliteta</span><b>Planirana funkcija</b></label><p class="small">U sledećoj audio nadogradnji dodaćemo transponovanje u polustepenima bez promene tempa. Nećemo prikazivati kontrolu koja pogrešno menja brzinu umesto tonaliteta.</p></div>
+<div><div class="sectionhead"><h3>Tekst pesme</h3><span class="small">Podržan LRC format</span></div><div class="lyrics" id="lyrics">Ovde će se prikazivati tekst pesme.</div></div>
+<div class="editlyrics"><label class="small" for="lyricInput">Tekst pesme (LRC oznake vremena: [00:12.00] prvi stih)</label><textarea id="lyricInput" placeholder="[00:12.00]Prvi stih pesme&#10;[00:17.50]Drugi stih pesme"></textarea><div class="toolbar"><button class="secondary" id="saveLyrics">Sačuvaj tekst</button><button class="secondary" id="resetSpeed">Vrati brzinu</button></div></div>
+</section></div></main><footer>Balkan Karaoke · V1.2 · Audio fajlovi i tekstovi čuvaju se lokalno u pregledaču</footer>
+<script>
+const $=id=>document.getElementById(id), DB_NAME='BalkanKaraokeDB', STORE='tracks';
+let tracks=[],selectedId=null,mode='instrumental',lyricLines=[];
+const audio=$('audio');
+const openDB=()=>new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:'id'})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)});
+let db;
+function tx(modeName='readonly'){return db.transaction(STORE,modeName).objectStore(STORE)}
+function saveTrack(t){return new Promise((resolve,reject)=>{const r=tx('readwrite').put(t);r.onsuccess=resolve;r.onerror=()=>reject(r.error)})}
+function getAll(){return new Promise((resolve,reject)=>{const r=tx().getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error)})}
+function deleteAll(){return new Promise((resolve,reject)=>{const r=tx('readwrite').clear();r.onsuccess=resolve;r.onerror=()=>reject(r.error)})}
+function keyName(name){return name.replace(/\.[^.]+$/,'').replace(/\s*[-_ ]?(instrumental|karaoke|matrica|original|vokal|vocal)\s*$/i,'').trim().toLocaleLowerCase('sr')}
+function displayName(name){return name.replace(/\.[^.]+$/,'').replace(/\s*[-_ ]?(instrumental|karaoke|matrica|original|vokal|vocal)\s*$/i,'').trim()}
+function getSelected(){return tracks.find(t=>t.id===selectedId)}
+function render(){const q=$('search').value.toLocaleLowerCase('sr'),list=$('songlist');list.innerHTML='';const shown=tracks.filter(t=>(t.name+' '+(t.artist||'')).toLocaleLowerCase('sr').includes(q));$('count').textContent=tracks.length+' pesama';if(!shown.length){list.innerHTML='<div class="empty">Nema pesama za prikaz.</div>';return}
+shown.forEach(t=>{const el=document.createElement('div');el.className='song'+(t.id===selectedId?' active':'');const modes=[t.instrumental?'Karaoke':'',t.original?'Original':''].filter(Boolean).join(' · ')||'Bez audio fajla';el.innerHTML='<div class="disc">♫</div><div class="songinfo"><strong></strong><small></small></div><button class="secondary">Izaberi</button>';el.querySelector('strong').textContent=t.name;el.querySelector('small').textContent=modes;el.querySelector('button').onclick=()=>selectTrack(t.id);el.onclick=e=>{if(e.target.tagName!=='BUTTON')selectTrack(t.id)};list.appendChild(el)})}
+function revokeCurrent(){if(audio.dataset.url){URL.revokeObjectURL(audio.dataset.url);delete audio.dataset.url}}
+function loadAudio(t,autoplay=false){const blob=mode==='instrumental'?t.instrumental:t.original;if(!blob){audio.pause();audio.removeAttribute('src');revokeCurrent();$('dbStatus').textContent=mode==='instrumental'?'Za ovu pesmu nema dodatog instrumentala.':'Za ovu pesmu nema dodatog originalnog snimka.';return}
+revokeCurrent();const url=URL.createObjectURL(blob);audio.dataset.url=url;audio.src=url;audio.load();if(autoplay)audio.play().catch(()=>{});$('dbStatus').textContent=mode==='instrumental'?'Režim KARAOKE – instrumental':'Režim ORIGINAL – originalni snimak'}
+function selectTrack(id){selectedId=id;const t=getSelected();if(!t)return;$('title').textContent=t.name;$('artist').textContent=t.artist||'Lokalna biblioteka';$('lyricInput').value=t.lyrics||'';parseLyrics(t.lyrics||'');render();loadAudio(t,false)}
+async function addFiles(files,kind){for(const file of files){const base=keyName(file.name);let t=tracks.find(x=>x.key===base);if(!t){t={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),key:base,name:displayName(file.name),artist:'Lokalna biblioteka',instrumental:null,original:null,lyrics:''};tracks.push(t)}
+if(kind==='instrumental')t.instrumental=file;else t.original=file;await saveTrack(t)}
+render();if(!selectedId&&tracks.length)selectTrack(tracks[0].id)}
+function parseLyrics(txt){lyricLines=[];for(const line of txt.split(/\r?\n/)){const m=line.match(/^\[(\d{2}):(\d{2})(?:[.:](\d{1,3}))?\](.*)$/);if(m)lyricLines.push({time:+m[1]*60 + +m[2] + Number('0.'+(m[3]||'0')),text:m[4]})}$('lyrics').textContent=txt||'Ovde će se prikazivati tekst pesme.'}
+audio.addEventListener('timeupdate',()=>{if(!lyricLines.length)return;let i=-1;for(let n=0;n<lyricLines.length;n++){if(audio.currentTime>=lyricLines[n].time)i=n;else break}if(i>=0)$('lyrics').textContent=lyricLines.map((l,n)=>n===i?'▶ '+l.text:l.text).join('\n')});
+$('addInst').onclick=()=>$('instFiles').click();$('addOrig').onclick=()=>$('origFiles').click();
+$('instFiles').onchange=async e=>{await addFiles([...e.target.files],'instrumental');e.target.value=''};
+$('origFiles').onchange=async e=>{await addFiles([...e.target.files],'original');e.target.value=''};
+function setMode(next){mode=next;$('karaokeMode').className=next==='instrumental'?'active':'secondary';$('originalMode').className=next==='original'?'active':'secondary';const t=getSelected();if(t)loadAudio(t,true)}
+$('karaokeMode').onclick=()=>setMode('instrumental');$('originalMode').onclick=()=>setMode('original');
+$('search').oninput=render;
+$('volume').oninput=e=>{audio.volume=e.target.value/100;$('volVal').textContent=e.target.value+'%'};audio.volume=.85;
+$('speed').oninput=e=>{audio.playbackRate=e.target.value/100;$('speedVal').textContent=e.target.value+'%'};
+$('resetSpeed').onclick=()=>{$('speed').value=100;audio.playbackRate=1;$('speedVal').textContent='100%'};
+$('saveLyrics').onclick=async()=>{const t=getSelected();if(!t){alert('Prvo izaberi pesmu.');return}t.lyrics=$('lyricInput').value;await saveTrack(t);parseLyrics(t.lyrics);$('dbStatus').textContent='Tekst je sačuvan u lokalnoj biblioteci.'};
+$('clearBtn').onclick=async()=>{if(!confirm('Obrisati sve pesme i audio fajlove iz ovog pregledača?'))return;audio.pause();audio.removeAttribute('src');revokeCurrent();await deleteAll();tracks=[];selectedId=null;$('title').textContent='Izaberi pesmu';$('artist').textContent='Balkan Karaoke';$('lyrics').textContent='Ovde će se prikazivati tekst pesme.';render()};
+$('tvBtn').onclick=async()=>{document.documentElement.classList.toggle('tv');try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(e){}};
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)document.documentElement.classList.remove('tv')});
+(async()=>{try{db=await openDB();tracks=await getAll();render();$('dbStatus').textContent='Lokalna biblioteka spremna · '+tracks.length+' pesama sačuvano';if(tracks.length)selectTrack(tracks[0].id)}catch(e){$('dbStatus').textContent='Pregledač nije omogućio lokalno čuvanje. Probaj Safari ili Chrome.'}})();
+</script></body></html>
