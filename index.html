@@ -21,7 +21,7 @@ audio{width:100%;height:42px;filter:invert(.88) hue-rotate(180deg)}.modebar{disp
 textarea{width:100%;min-height:105px;resize:vertical;background:#10182a;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px}.small{font-size:12px;color:var(--muted)}.sectionhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
 .status{font-size:12px;color:var(--muted);margin-top:8px}.tag{font-size:10px;border:1px solid var(--line);border-radius:99px;padding:3px 7px;color:var(--muted);white-space:nowrap}
 footer{padding:0 20px 28px;text-align:center;color:var(--muted);font-size:12px}
-.tv header,.tv .library,.tv .hero{display:none}.tv main{max-width:none;padding:2vh 3vw}.tv .layout{display:block}.tv .now{min-height:12vh}.tv .now h3{font-size:clamp(28px,4vw,56px)}.tv .lyrics{max-height:55vh;min-height:42vh;font-size:clamp(24px,4vw,54px);line-height:1.5}.tv .modebar,.tv .controls,.tv .editlyrics,.tv .pitchnote{display:none}
+.tv header,.tv .library,.tv .hero{display:none}.tv main{max-width:none;padding:2vh 3vw}.tv .layout{display:block}.tv .now{min-height:12vh}.tv .now h3{font-size:clamp(28px,4vw,56px)}.tv .lyrics{max-height:55vh;min-height:42vh;font-size:clamp(24px,4vw,54px);line-height:1.5}.tv .modebar,.tv .controls,.tv .editlyrics,.tv .pitchbox{display:none}
 @media(max-width:900px){.layout{grid-template-columns:1fr}.hero{align-items:start;flex-direction:column}}@media(max-width:520px){header{padding:14px}.panel{padding:15px}.controls{grid-template-columns:1fr}.hero h2{font-size:32px}.song{gap:8px}}
 </style></head>
 <body>
@@ -35,14 +35,43 @@ footer{padding:0 20px 28px;text-align:center;color:var(--muted);font-size:12px}
 <div class="modebar"><button id="karaokeMode" class="active">♫ KARAOKE</button><button id="originalMode" class="secondary">🎤 ORIGINAL</button></div>
 <audio id="audio" controls></audio>
 <div class="controls"><div class="control"><label><span>Jačina zvuka</span><b id="volVal">85%</b></label><input id="volume" type="range" min="0" max="100" value="85"></div><div class="control"><label><span>Brzina reprodukcije</span><b id="speedVal">100%</b></label><input id="speed" type="range" min="85" max="115" value="100"></div></div>
-<div class="control pitchnote"><label><span>Promena tonaliteta</span><b>Planirana funkcija</b></label><p class="small">U sledećoj audio nadogradnji dodaćemo transponovanje u polustepenima bez promene tempa. Nećemo prikazivati kontrolu koja pogrešno menja brzinu umesto tonaliteta.</p></div>
+<div class="control pitchbox"><label><span>Promena tonaliteta</span><b id="pitchVal">Original (0)</b></label><input id="pitch" type="range" min="-6" max="6" step="1" value="0"><div class="small" style="display:flex;justify-content:space-between"><span>−6 polustepena</span><span>+6 polustepena</span></div><div class="toolbar"><button class="secondary" id="enablePitch">Aktiviraj obradu zvuka</button><button class="secondary" id="resetPitch">Originalni tonalitet</button></div><p class="small" id="pitchStatus">Tonalitet se aktivira prvim pritiskom na dugme. Potrebna je internet veza za učitavanje audio biblioteke.</p></div>
 <div><div class="sectionhead"><h3>Tekst pesme</h3><span class="small">Podržan LRC format</span></div><div class="lyrics" id="lyrics">Ovde će se prikazivati tekst pesme.</div></div>
 <div class="editlyrics"><label class="small" for="lyricInput">Tekst pesme (LRC oznake vremena: [00:12.00] prvi stih)</label><textarea id="lyricInput" placeholder="[00:12.00]Prvi stih pesme&#10;[00:17.50]Drugi stih pesme"></textarea><div class="toolbar"><button class="secondary" id="saveLyrics">Sačuvaj tekst</button><button class="secondary" id="resetSpeed">Vrati brzinu</button></div></div>
-</section></div></main><footer>Balkan Karaoke · V1.2 · Audio fajlovi i tekstovi čuvaju se lokalno u pregledaču</footer>
-<script>
+</section></div></main><footer>Balkan Karaoke · V1.3 · Audio fajlovi i tekstovi čuvaju se lokalno u pregledaču</footer>
+<script type="module">
 const $=id=>document.getElementById(id), DB_NAME='BalkanKaraokeDB', STORE='tracks';
 let tracks=[],selectedId=null,mode='instrumental',lyricLines=[];
 const audio=$('audio');
+let pitchContext=null, pitchNode=null, mediaSource=null, pitchReady=false;
+const processorUrl='https://cdn.jsdelivr.net/npm/@soundtouchjs/audio-worklet@2.1.1/.dist/soundtouch-processor.js';
+async function enablePitch(){
+ if(pitchReady){await pitchContext.resume();$('pitchStatus').textContent='Promena tonaliteta je aktivna.';return}
+ $('enablePitch').disabled=true;$('pitchStatus').textContent='Učitavam audio obradu…';
+ try{
+   const {SoundTouchNode}=await import('https://esm.sh/@soundtouchjs/audio-worklet@2.1.1');
+   pitchContext=new (window.AudioContext||window.webkitAudioContext)();
+   await pitchContext.resume();
+   await SoundTouchNode.register(pitchContext,processorUrl);
+   pitchNode=new SoundTouchNode({context:pitchContext});
+   mediaSource=pitchContext.createMediaElementSource(audio);
+   mediaSource.connect(pitchNode);pitchNode.connect(pitchContext.destination);
+   audio.preservesPitch=false;
+   pitchNode.pitchSemitones.value=Number($('pitch').value);
+   pitchNode.playbackRate.value=audio.playbackRate;
+   pitchReady=true;
+   $('pitchStatus').textContent='Obrada je aktivna. Tonalitet možeš menjati tokom reprodukcije.';
+   $('enablePitch').textContent='Obrada zvuka aktivna';
+ }catch(err){
+   console.error(err);$('pitchStatus').textContent='Nije moguće aktivirati obradu u ovom pregledaču. Proveri internet vezu i pokušaj ponovo.';
+   $('enablePitch').disabled=false;
+ }
+}
+function updatePitch(){
+ const n=Number($('pitch').value);
+ $('pitchVal').textContent=n===0?'Original (0)':(n>0?'+':'')+n+' polustepena';
+ if(pitchNode)pitchNode.pitchSemitones.value=n;
+}
 const openDB=()=>new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:'id'})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)});
 let db;
 function tx(modeName='readonly'){return db.transaction(STORE,modeName).objectStore(STORE)}
@@ -70,8 +99,12 @@ function setMode(next){mode=next;$('karaokeMode').className=next==='instrumental
 $('karaokeMode').onclick=()=>setMode('instrumental');$('originalMode').onclick=()=>setMode('original');
 $('search').oninput=render;
 $('volume').oninput=e=>{audio.volume=e.target.value/100;$('volVal').textContent=e.target.value+'%'};audio.volume=.85;
-$('speed').oninput=e=>{audio.playbackRate=e.target.value/100;$('speedVal').textContent=e.target.value+'%'};
-$('resetSpeed').onclick=()=>{$('speed').value=100;audio.playbackRate=1;$('speedVal').textContent='100%'};
+$('speed').oninput=e=>{audio.playbackRate=e.target.value/100;$('speedVal').textContent=e.target.value+'%';if(pitchNode)pitchNode.playbackRate.value=audio.playbackRate};
+$('enablePitch').onclick=enablePitch;
+$('pitch').oninput=updatePitch;
+$('resetPitch').onclick=()=>{$('pitch').value=0;updatePitch()};
+updatePitch();
+$('resetSpeed').onclick=()=>{$('speed').value=100;audio.playbackRate=1;if(pitchNode)pitchNode.playbackRate.value=1;$('speedVal').textContent='100%'};
 $('saveLyrics').onclick=async()=>{const t=getSelected();if(!t){alert('Prvo izaberi pesmu.');return}t.lyrics=$('lyricInput').value;await saveTrack(t);parseLyrics(t.lyrics);$('dbStatus').textContent='Tekst je sačuvan u lokalnoj biblioteci.'};
 $('clearBtn').onclick=async()=>{if(!confirm('Obrisati sve pesme i audio fajlove iz ovog pregledača?'))return;audio.pause();audio.removeAttribute('src');revokeCurrent();await deleteAll();tracks=[];selectedId=null;$('title').textContent='Izaberi pesmu';$('artist').textContent='Balkan Karaoke';$('lyrics').textContent='Ovde će se prikazivati tekst pesme.';render()};
 $('tvBtn').onclick=async()=>{document.documentElement.classList.toggle('tv');try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(e){}};
