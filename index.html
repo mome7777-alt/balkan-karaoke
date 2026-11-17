@@ -23,12 +23,29 @@ textarea{width:100%;min-height:105px;resize:vertical;background:#10182a;color:va
 footer{padding:0 20px 28px;text-align:center;color:var(--muted);font-size:12px}
 .tv header,.tv .library,.tv .hero{display:none}.tv main{max-width:none;padding:2vh 3vw}.tv .layout{display:block}.tv .now{min-height:12vh}.tv .now h3{font-size:clamp(28px,4vw,56px)}.tv .lyrics{max-height:55vh;min-height:42vh;font-size:clamp(24px,4vw,54px);line-height:1.5}.tv .modebar,.tv .controls,.tv .editlyrics,.tv .pitchbox{display:none}
 @media(max-width:900px){.layout{grid-template-columns:1fr}.hero{align-items:start;flex-direction:column}}@media(max-width:520px){header{padding:14px}.panel{padding:15px}.controls{grid-template-columns:1fr}.hero h2{font-size:32px}.song{gap:8px}}
-</style></head>
+a button{width:100%}.panel .toolbar a{flex:1;min-width:190px}@media(max-width:520px){.panel .toolbar a{min-width:100%}}</style></head>
 <body>
 <header><div class="brand"><div class="logo">♫</div><div><h1>BALKAN KARAOKE</h1><p>Tvoja muzika. Tvoj glas. Tvoj tonalitet.</p></div></div><button class="secondary" id="tvBtn">▣ TV režim</button></header>
 <main>
 <section class="hero"><div><div class="eyebrow">Privatna karaoke biblioteka</div><h2>Veče je za pevanje.</h2><p>Dodaj originalne i instrumentalne snimke. Biblioteka i tekstovi ostaju sačuvani u ovom pregledaču na ovom uređaju.</p></div>
 <div class="toolbar"><button id="addInst">＋ Instrumentali</button><button class="secondary" id="addOrig">＋ Originali</button><input id="instFiles" type="file" accept="audio/*" multiple hidden><input id="origFiles" type="file" accept="audio/*" multiple hidden></div></section>
+
+<section class="panel" style="margin-bottom:18px">
+  <div class="sectionhead"><h3>Probna online pesma</h3><span class="tag">Halid Bešlić · Miljacka</span></div>
+  <p class="small">Za prvo testiranje koristimo javno dostupne YouTube snimke i spoljašnji izvor sinhronizovanog teksta. Snimci se reprodukuju preko YouTube-a; nisu preuzeti niti smešteni na GitHub.</p>
+  <div class="modebar" style="margin:12px 0">
+    <button id="onlineKaraoke" class="active">♫ KARAOKE</button>
+    <button id="onlineOriginal" class="secondary">🎤 ORIGINAL</button>
+  </div>
+  <div style="position:relative;width:100%;aspect-ratio:16/9;background:#080d18;border-radius:14px;overflow:hidden">
+    <iframe id="onlineVideo" title="Miljacka – karaoke/original" src="https://www.youtube-nocookie.com/embed/-NUWp-4u6Ts?rel=0" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
+  </div>
+  <div class="toolbar" style="margin-top:12px">
+    <a id="lyricsSource" href="https://tfaparty.com/lyrics/halid-beslic-miljacka-tnd-fuuJmhU" target="_blank" rel="noopener" style="text-decoration:none"><button class="secondary" type="button">Otvori sinhronizovan tekst</button></a>
+    <a href="https://karaokestudiod.com/free" target="_blank" rel="noopener" style="text-decoration:none"><button class="secondary" type="button">Katalog besplatnih karaoka</button></a>
+  </div>
+  <p class="status" id="onlineStatus">Režim KARAOKE: javni karaoke video sa YouTube-a.</p>
+</section>
 <div class="layout">
 <section class="panel library"><div class="sectionhead"><h3>Moja biblioteka</h3><span class="small" id="count">0 pesama</span></div><div class="toolbar"><input class="search" id="search" placeholder="Pretraži pesmu ili izvođača…"><button class="secondary" id="clearBtn">Obriši sve</button></div><div class="songlist" id="songlist"><div class="empty">Biblioteka je prazna.<br>Dodaj instrumentalne i/ili originalne fajlove.</div></div><p class="status" id="dbStatus">Provera lokalne biblioteke…</p></section>
 <section class="panel player"><div class="now"><div><div class="eyebrow">Sada se peva</div><h3 id="title">Izaberi pesmu</h3><p id="artist">Balkan Karaoke</p></div></div>
@@ -109,5 +126,17 @@ $('saveLyrics').onclick=async()=>{const t=getSelected();if(!t){alert('Prvo izabe
 $('clearBtn').onclick=async()=>{if(!confirm('Obrisati sve pesme i audio fajlove iz ovog pregledača?'))return;audio.pause();audio.removeAttribute('src');revokeCurrent();await deleteAll();tracks=[];selectedId=null;$('title').textContent='Izaberi pesmu';$('artist').textContent='Balkan Karaoke';$('lyrics').textContent='Ovde će se prikazivati tekst pesme.';render()};
 $('tvBtn').onclick=async()=>{document.documentElement.classList.toggle('tv');try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(e){}};
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)document.documentElement.classList.remove('tv')});
-(async()=>{try{db=await openDB();tracks=await getAll();render();$('dbStatus').textContent='Lokalna biblioteka spremna · '+tracks.length+' pesama sačuvano';if(tracks.length)selectTrack(tracks[0].id)}catch(e){$('dbStatus').textContent='Pregledač nije omogućio lokalno čuvanje. Probaj Safari ili Chrome.'}})();
+(async()=>{try{db=await openDB();tracks=await getAll();
+const onlineIds={karaoke:'-NUWp-4u6Ts',original:'PlTBOzsABKU'};
+function setOnlineMode(next){
+ const frame=$('onlineVideo');
+ frame.src='https://www.youtube-nocookie.com/embed/'+onlineIds[next]+'?rel=0';
+ $('onlineKaraoke').className=next==='karaoke'?'active':'secondary';
+ $('onlineOriginal').className=next==='original'?'active':'secondary';
+ $('onlineStatus').textContent=next==='karaoke'?'Režim KARAOKE: javni karaoke video sa YouTube-a.':'Režim ORIGINAL: zvanični audio snimak sa YouTube kanala Halida Bešlića.';
+}
+$('onlineKaraoke').onclick=()=>setOnlineMode('karaoke');
+$('onlineOriginal').onclick=()=>setOnlineMode('original');
+
+render();$('dbStatus').textContent='Lokalna biblioteka spremna · '+tracks.length+' pesama sačuvano';if(tracks.length)selectTrack(tracks[0].id)}catch(e){$('dbStatus').textContent='Pregledač nije omogućio lokalno čuvanje. Probaj Safari ili Chrome.'}})();
 </script></body></html>
