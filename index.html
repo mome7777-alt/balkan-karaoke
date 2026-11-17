@@ -30,6 +30,13 @@ a button{width:100%}.panel .toolbar a{flex:1;min-width:190px}@media(max-width:52
 <section class="hero"><div><div class="eyebrow">Privatna karaoke biblioteka</div><h2>Veče je za pevanje.</h2><p>Dodaj originalne i instrumentalne snimke. Biblioteka i tekstovi ostaju sačuvani u ovom pregledaču na ovom uređaju.</p></div>
 <div class="toolbar"><button id="addInst">＋ Instrumentali</button><button class="secondary" id="addOrig">＋ Originali</button><input id="instFiles" type="file" accept="audio/*" multiple hidden><input id="origFiles" type="file" accept="audio/*" multiple hidden></div></section>
 
+<section class="panel" style="margin-bottom:18px" id="freeCatalogPanel">
+  <div class="sectionhead"><h3>Besplatni Balkan katalog</h3><span class="tag">20 predloga · bez plaćanja</span></div>
+  <p class="small">Ovo je početna lista pesama koje se pojavljuju u besplatnom katalogu Karaoke Studio D. Izbor i reprodukcija se proveravaju na njihovom sajtu; nisu sve pesme nužno dostupne u istoj karaoke verziji.</p>
+  <input class="search" id="freeSearch" placeholder="Pretraži ovih 20 pesama ili izvođača…" style="width:100%;margin:8px 0 12px">
+  <div class="songlist" id="freeSongList" style="max-height:360px"></div>
+  <div class="toolbar"><a href="https://karaokestudiod.com/free" target="_blank" rel="noopener" style="text-decoration:none;flex:1"><button type="button" class="secondary" style="width:100%">Otvori besplatni katalog i pusti pesmu</button></a></div>
+</section>
 <section class="panel" style="margin-bottom:18px">
   <div class="sectionhead"><h3>Probna online pesma</h3><span class="tag">Halid Bešlić · Miljacka</span></div>
   <p class="small">Za prvo testiranje koristimo javno dostupne YouTube snimke i spoljašnji izvor sinhronizovanog teksta. Snimci se reprodukuju preko YouTube-a; nisu preuzeti niti smešteni na GitHub.</p>
@@ -55,7 +62,7 @@ a button{width:100%}.panel .toolbar a{flex:1;min-width:190px}@media(max-width:52
 <div class="control pitchbox"><label><span>Promena tonaliteta</span><b id="pitchVal">Original (0)</b></label><input id="pitch" type="range" min="-6" max="6" step="1" value="0"><div class="small" style="display:flex;justify-content:space-between"><span>−6 polustepena</span><span>+6 polustepena</span></div><div class="toolbar"><button class="secondary" id="enablePitch">Aktiviraj obradu zvuka</button><button class="secondary" id="resetPitch">Originalni tonalitet</button></div><p class="small" id="pitchStatus">Tonalitet se aktivira prvim pritiskom na dugme. Potrebna je internet veza za učitavanje audio biblioteke.</p></div>
 <div><div class="sectionhead"><h3>Tekst pesme</h3><span class="small">Podržan LRC format</span></div><div class="lyrics" id="lyrics">Ovde će se prikazivati tekst pesme.</div></div>
 <div class="editlyrics"><label class="small" for="lyricInput">Tekst pesme (LRC oznake vremena: [00:12.00] prvi stih)</label><textarea id="lyricInput" placeholder="[00:12.00]Prvi stih pesme&#10;[00:17.50]Drugi stih pesme"></textarea><div class="toolbar"><button class="secondary" id="saveLyrics">Sačuvaj tekst</button><button class="secondary" id="resetSpeed">Vrati brzinu</button></div></div>
-</section></div></main><footer>Balkan Karaoke · V1.3 · Audio fajlovi i tekstovi čuvaju se lokalno u pregledaču</footer>
+</section></div></main><footer>Balkan Karaoke · V1.5 · Audio fajlovi i tekstovi čuvaju se lokalno u pregledaču</footer>
 <script type="module">
 const $=id=>document.getElementById(id), DB_NAME='BalkanKaraokeDB', STORE='tracks';
 let tracks=[],selectedId=null,mode='instrumental',lyricLines=[];
@@ -126,6 +133,16 @@ $('saveLyrics').onclick=async()=>{const t=getSelected();if(!t){alert('Prvo izabe
 $('clearBtn').onclick=async()=>{if(!confirm('Obrisati sve pesme i audio fajlove iz ovog pregledača?'))return;audio.pause();audio.removeAttribute('src');revokeCurrent();await deleteAll();tracks=[];selectedId=null;$('title').textContent='Izaberi pesmu';$('artist').textContent='Balkan Karaoke';$('lyrics').textContent='Ovde će se prikazivati tekst pesme.';render()};
 $('tvBtn').onclick=async()=>{document.documentElement.classList.toggle('tv');try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(e){}};
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)document.documentElement.classList.remove('tv')});
+const freeSongs = [
+ ['Zajdi, zajdi','Toše Proeski'],['Tako mi nedostaješ','Miroslav Ilić'],['Lepi moj','Snežana Đurišić'],['Bitanga i princeza','Bijelo Dugme'],['Žute dunje','Indexi'],['Olovo (Acoustic)','Aleksandra Prijović'],['Dao bih ovo malo života','Milanče Radosavljević'],['Lavanda','Halid Bešlić'],['Loše vino','Massimo'],['Čestitka manje','Džej'],['Kao ptica na mom dlanu','Piloti'],['Svatovi','Vesna Zmijanac'],['Olivera','Đorđe Balašević'],['Moj grad','Saša Matić'],['Rana ko rana','Osman Hadžić'],['Zora je svanula','Neda Ukraden'],['Ja slobodan, ona neverna','Đani'],['Ne vjeruje srce pameti','Miroslav Škoro'],['Mile voli disko','Lepa Brena'],['Ej, otkad sam se rodio','Sinan Sakić']
+];
+function renderFreeSongs(){
+ const q=($('freeSearch').value||'').toLocaleLowerCase('sr'); const list=$('freeSongList'); list.innerHTML='';
+ const found=freeSongs.filter(([name,artist])=>(name+' '+artist).toLocaleLowerCase('sr').includes(q));
+ if(!found.length){list.innerHTML='<div class="empty">Nema rezultata.</div>';return}
+ found.forEach(([name,artist],i)=>{const el=document.createElement('div');el.className='song';el.innerHTML='<div class="disc">♫</div><div class="songinfo"><strong></strong><small></small></div><button class="secondary">Otvori katalog</button>';el.querySelector('strong').textContent=name;el.querySelector('small').textContent=artist;el.querySelector('button').onclick=()=>window.open('https://karaokestudiod.com/free','_blank','noopener');list.appendChild(el)});
+}
+$('freeSearch').addEventListener('input',renderFreeSongs);renderFreeSongs();
 (async()=>{try{db=await openDB();tracks=await getAll();
 const onlineIds={karaoke:'-NUWp-4u6Ts',original:'PlTBOzsABKU'};
 function setOnlineMode(next){
