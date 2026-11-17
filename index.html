@@ -64,7 +64,7 @@ a button{width:100%}.panel .toolbar a{flex:1;min-width:190px}@media(max-width:52
 <div class="control pitchbox"><label><span>Promena tonaliteta</span><b id="pitchVal">Original (0)</b></label><input id="pitch" type="range" min="-6" max="6" step="1" value="0"><div class="small" style="display:flex;justify-content:space-between"><span>−6 polustepena</span><span>+6 polustepena</span></div><div class="toolbar"><button class="secondary" id="enablePitch">Aktiviraj obradu zvuka</button><button class="secondary" id="resetPitch">Originalni tonalitet</button></div><p class="small" id="pitchStatus">Tonalitet se aktivira prvim pritiskom na dugme. Potrebna je internet veza za učitavanje audio biblioteke.</p></div>
 <div><div class="sectionhead"><h3>Tekst pesme</h3><span class="small">Podržan LRC format</span></div><div class="lyrics" id="lyrics">Ovde će se prikazivati tekst pesme.</div></div>
 <div class="editlyrics"><label class="small" for="lyricInput">Tekst pesme (LRC oznake vremena: [00:12.00] prvi stih)</label><textarea id="lyricInput" placeholder="[00:12.00]Prvi stih pesme&#10;[00:17.50]Drugi stih pesme"></textarea><div class="toolbar"><button class="secondary" id="saveLyrics">Sačuvaj tekst</button><button class="secondary" id="resetSpeed">Vrati brzinu</button></div></div>
-</section></div></main><footer>Balkan Karaoke · V1.7 · Audio fajlovi i tekstovi čuvaju se lokalno u pregledaču</footer>
+</section></div></main><footer>Balkan Karaoke · V1.8 · Audio fajlovi i tekstovi čuvaju se lokalno u pregledaču</footer>
 <script type="module">
 const $=id=>document.getElementById(id), DB_NAME='BalkanKaraokeDB', STORE='tracks';
 let tracks=[],selectedId=null,mode='instrumental',lyricLines=[];
@@ -111,14 +111,16 @@ function render(){const q=$('search').value.toLocaleLowerCase('sr'),list=$('song
 shown.forEach(t=>{const el=document.createElement('div');el.className='song'+(t.id===selectedId?' active':'');const modes=[t.instrumental?'Karaoke':'',t.original?'Original':''].filter(Boolean).join(' · ')||(onlineId(t)?'Online video':'Bez audio fajla');el.innerHTML='<div class="disc">♫</div><div class="songinfo"><strong></strong><small></small></div><button class="secondary">Izaberi</button>';el.querySelector('strong').textContent=t.name;el.querySelector('small').textContent=modes;el.querySelector('button').onclick=()=>selectTrack(t.id);el.onclick=e=>{if(e.target.tagName!=='BUTTON')selectTrack(t.id)};list.appendChild(el)})}
 function revokeCurrent(){if(audio.dataset.url){URL.revokeObjectURL(audio.dataset.url);delete audio.dataset.url}}
 const onlineTracks={
- 'miljacka|halid bešlić':{instrumental:'OnxCoIzIX_o',original:'fUFWt2csQ5g'}
+ // Provereni javni YouTube snimci; YouTube može ograničiti ugrađivanje po regionu ili uređaju.
+ 'miljacka|halid bešlić':{instrumental:'OnxCoIzIX_o',original:'bziutuAzKDk'},
+ 'lepi moj|snežana đurišić':{instrumental:null,original:'QVtFuyXBmPw'}
 };
 function onlineId(t){return onlineTracks[((t.name||'')+'|'+(t.artist||'')).toLocaleLowerCase('sr')]?.[mode]||null}
 function loadAudio(t,autoplay=false){
  const videoId=onlineId(t);
- if(videoId){audio.pause();audio.removeAttribute('src');revokeCurrent();audio.style.display='none';$('onlinePlayer').style.display='block';$('playerNotice').style.display='block';const frame=$('playerVideo');frame.src='https://www.youtube-nocookie.com/embed/'+videoId+'?playsinline=1&rel=0';$('dbStatus').textContent=mode==='instrumental'?'KARAOKE video sa YouTube-a. Pritisni ▶ na snimku.':'ORIGINAL video sa YouTube-a. Pritisni ▶ na snimku.';return}
+ if(videoId){audio.pause();audio.removeAttribute('src');revokeCurrent();audio.style.display='none';$('onlinePlayer').style.display='block';$('playerNotice').style.display='block';const frame=$('playerVideo');frame.src='https://www.youtube-nocookie.com/embed/'+videoId+'?playsinline=1&rel=0';$('dbStatus').textContent=mode==='instrumental'?'Dostupan je karaoke snimak. Pritisni ▶ u YouTube plejeru.':'Dostupan je originalni snimak. Pritisni ▶ u YouTube plejeru.';return}
  $('onlinePlayer').style.display='none';$('playerNotice').style.display='none';$('playerVideo').src='about:blank';audio.style.display='block';
- const blob=mode==='instrumental'?t.instrumental:t.original;if(!blob){audio.pause();audio.removeAttribute('src');revokeCurrent();$('dbStatus').textContent=mode==='instrumental'?'Za ovu pesmu nema dodatog instrumentala niti proverenog online snimka.':'Za ovu pesmu nema dodatog originalnog snimka niti proverenog online snimka.';return}
+ const blob=mode==='instrumental'?t.instrumental:t.original;if(!blob){audio.pause();audio.removeAttribute('src');revokeCurrent();$('dbStatus').textContent=mode==='instrumental'?'Za ovu pesmu još nema proverenog karaoke snimka. Izaberi ORIGINAL ili dodaj svoj instrumental.':'Za ovu pesmu nema dodatog originalnog snimka niti proverenog online izvora.';return}
 revokeCurrent();const url=URL.createObjectURL(blob);audio.dataset.url=url;audio.src=url;audio.load();if(autoplay)audio.play().catch(()=>{});$('dbStatus').textContent=mode==='instrumental'?'Režim KARAOKE – instrumental':'Režim ORIGINAL – originalni snimak'}
 function selectTrack(id){selectedId=id;const t=getSelected();if(!t)return;$('title').textContent=t.name;$('artist').textContent=t.artist||'Lokalna biblioteka';$('lyricInput').value=t.lyrics||'';parseLyrics(t.lyrics||'');render();loadAudio(t,false)}
 async function addFiles(files,kind){for(const file of files){const base=keyName(file.name);let t=tracks.find(x=>x.key===base);if(!t){t={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),key:base,name:displayName(file.name),artist:'Lokalna biblioteka',instrumental:null,original:null,lyrics:''};tracks.push(t)}
@@ -150,7 +152,7 @@ async function addCatalogSong(name,artist){
  const key=(name+' '+artist).toLocaleLowerCase('sr');
  let t=tracks.find(x=>x.catalogKey===key || (x.name.toLocaleLowerCase('sr')===name.toLocaleLowerCase('sr') && (x.artist||'').toLocaleLowerCase('sr')===artist.toLocaleLowerCase('sr')));
  if(!t){t={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),key:keyName(name),catalogKey:key,name,artist,instrumental:null,original:null,lyrics:''};tracks.push(t);await saveTrack(t)}
- selectedId=t.id;$('title').textContent=t.name;$('artist').textContent=t.artist||artist;$('lyricInput').value=t.lyrics||'';parseLyrics(t.lyrics||'');render();loadAudio(t,false);$('dbStatus').textContent=(t.instrumental||t.original)?'Pesma je izabrana.':'Pesma je dodata u biblioteku. Dodaj instrumental ili originalni audio fajl pomoću dugmadi na vrhu.';
+ selectedId=t.id;$('title').textContent=t.name;$('artist').textContent=t.artist||artist;$('lyricInput').value=t.lyrics||'';parseLyrics(t.lyrics||'');render();loadAudio(t,false);
  document.querySelector('.library').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function renderFreeSongs(){
@@ -162,7 +164,7 @@ function renderFreeSongs(){
 $('freeSearch').addEventListener('input',renderFreeSongs);renderFreeSongs();
 $('addMiljacka').onclick=()=>addCatalogSong('Miljacka','Halid Bešlić');
 (async()=>{try{db=await openDB();tracks=await getAll();
-const onlineIds={karaoke:'-NUWp-4u6Ts',original:'PlTBOzsABKU'};
+const onlineIds={karaoke:'OnxCoIzIX_o',original:'bziutuAzKDk'};
 function setOnlineMode(next){
  const frame=$('onlineVideo');
  frame.src='https://www.youtube-nocookie.com/embed/'+onlineIds[next]+'?rel=0';
