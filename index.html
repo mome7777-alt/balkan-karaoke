@@ -31,15 +31,14 @@ a button{width:100%}.panel .toolbar a{flex:1;min-width:190px}@media(max-width:52
 <div class="toolbar"><button id="addInst">＋ Instrumentali</button><button class="secondary" id="addOrig">＋ Originali</button><input id="instFiles" type="file" accept="audio/*" multiple hidden><input id="origFiles" type="file" accept="audio/*" multiple hidden></div></section>
 
 <section class="panel" style="margin-bottom:18px" id="freeCatalogPanel">
-  <div class="sectionhead"><h3>Besplatni Balkan katalog</h3><span class="tag">20 predloga · bez plaćanja</span></div>
-  <p class="small">Ovo je početna lista pesama koje se pojavljuju u besplatnom katalogu Karaoke Studio D. Izbor i reprodukcija se proveravaju na njihovom sajtu; nisu sve pesme nužno dostupne u istoj karaoke verziji.</p>
+  <div class="sectionhead"><h3>Besplatni Balkan katalog</h3><span class="tag">20 predloga · bez pretplate</span></div>
+  <p class="small">Izaberi pesmu da je dodaš u svoju biblioteku. Zatim dodaj odgovarajući instrumental ili originalni audio fajl sa svog uređaja. Katalog ne sadrži unapred učitane matrice.</p>
   <input class="search" id="freeSearch" placeholder="Pretraži ovih 20 pesama ili izvođača…" style="width:100%;margin:8px 0 12px">
   <div class="songlist" id="freeSongList" style="max-height:360px"></div>
-  <div class="toolbar"><a href="https://karaokestudiod.com/free" target="_blank" rel="noopener" style="text-decoration:none;flex:1"><button type="button" class="secondary" style="width:100%">Otvori besplatni katalog i pusti pesmu</button></a></div>
 </section>
 <section class="panel" style="margin-bottom:18px">
   <div class="sectionhead"><h3>Probna online pesma</h3><span class="tag">Halid Bešlić · Miljacka</span></div>
-  <p class="small">Za prvo testiranje koristimo javno dostupne YouTube snimke i spoljašnji izvor sinhronizovanog teksta. Snimci se reprodukuju preko YouTube-a; nisu preuzeti niti smešteni na GitHub.</p>
+  <p class="small">Ovaj probni primer reprodukuje javno dostupan YouTube video unutar aplikacije. Za lokalnu biblioteku možeš dodati svoje audio fajlove i tekst pesme. Video može prikazivati YouTube oglase ili ograničenja reprodukcije.</p>
   <div class="modebar" style="margin:12px 0">
     <button id="onlineKaraoke" class="active">♫ KARAOKE</button>
     <button id="onlineOriginal" class="secondary">🎤 ORIGINAL</button>
@@ -48,8 +47,7 @@ a button{width:100%}.panel .toolbar a{flex:1;min-width:190px}@media(max-width:52
     <iframe id="onlineVideo" title="Miljacka – karaoke/original" src="https://www.youtube-nocookie.com/embed/-NUWp-4u6Ts?rel=0" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
   </div>
   <div class="toolbar" style="margin-top:12px">
-    <a id="lyricsSource" href="https://tfaparty.com/lyrics/halid-beslic-miljacka-tnd-fuuJmhU" target="_blank" rel="noopener" style="text-decoration:none"><button class="secondary" type="button">Otvori sinhronizovan tekst</button></a>
-    <a href="https://karaokestudiod.com/free" target="_blank" rel="noopener" style="text-decoration:none"><button class="secondary" type="button">Katalog besplatnih karaoka</button></a>
+    <button class="secondary" type="button" id="addMiljacka">＋ Dodaj Miljacku u biblioteku</button>
   </div>
   <p class="status" id="onlineStatus">Režim KARAOKE: javni karaoke video sa YouTube-a.</p>
 </section>
@@ -136,13 +134,21 @@ document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement
 const freeSongs = [
  ['Zajdi, zajdi','Toše Proeski'],['Tako mi nedostaješ','Miroslav Ilić'],['Lepi moj','Snežana Đurišić'],['Bitanga i princeza','Bijelo Dugme'],['Žute dunje','Indexi'],['Olovo (Acoustic)','Aleksandra Prijović'],['Dao bih ovo malo života','Milanče Radosavljević'],['Lavanda','Halid Bešlić'],['Loše vino','Massimo'],['Čestitka manje','Džej'],['Kao ptica na mom dlanu','Piloti'],['Svatovi','Vesna Zmijanac'],['Olivera','Đorđe Balašević'],['Moj grad','Saša Matić'],['Rana ko rana','Osman Hadžić'],['Zora je svanula','Neda Ukraden'],['Ja slobodan, ona neverna','Đani'],['Ne vjeruje srce pameti','Miroslav Škoro'],['Mile voli disko','Lepa Brena'],['Ej, otkad sam se rodio','Sinan Sakić']
 ];
+async function addCatalogSong(name,artist){
+ const key=(name+' '+artist).toLocaleLowerCase('sr');
+ let t=tracks.find(x=>x.catalogKey===key || (x.name.toLocaleLowerCase('sr')===name.toLocaleLowerCase('sr') && (x.artist||'').toLocaleLowerCase('sr')===artist.toLocaleLowerCase('sr')));
+ if(!t){t={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),key:keyName(name),catalogKey:key,name,artist,instrumental:null,original:null,lyrics:''};tracks.push(t);await saveTrack(t)}
+ selectedId=t.id;$('title').textContent=t.name;$('artist').textContent=t.artist||artist;$('lyricInput').value=t.lyrics||'';parseLyrics(t.lyrics||'');render();loadAudio(t,false);$('dbStatus').textContent=(t.instrumental||t.original)?'Pesma je izabrana.':'Pesma je dodata u biblioteku. Dodaj instrumental ili originalni audio fajl pomoću dugmadi na vrhu.';
+ document.querySelector('.library').scrollIntoView({behavior:'smooth',block:'start'});
+}
 function renderFreeSongs(){
  const q=($('freeSearch').value||'').toLocaleLowerCase('sr'); const list=$('freeSongList'); list.innerHTML='';
  const found=freeSongs.filter(([name,artist])=>(name+' '+artist).toLocaleLowerCase('sr').includes(q));
  if(!found.length){list.innerHTML='<div class="empty">Nema rezultata.</div>';return}
- found.forEach(([name,artist],i)=>{const el=document.createElement('div');el.className='song';el.innerHTML='<div class="disc">♫</div><div class="songinfo"><strong></strong><small></small></div><button class="secondary">Otvori katalog</button>';el.querySelector('strong').textContent=name;el.querySelector('small').textContent=artist;el.querySelector('button').onclick=()=>window.open('https://karaokestudiod.com/free','_blank','noopener');list.appendChild(el)});
+ found.forEach(([name,artist])=>{const el=document.createElement('div');el.className='song';el.innerHTML='<div class="disc">♫</div><div class="songinfo"><strong></strong><small></small></div><button class="secondary">Izaberi</button>';el.querySelector('strong').textContent=name;el.querySelector('small').textContent=artist;el.querySelector('button').onclick=()=>addCatalogSong(name,artist);el.onclick=e=>{if(e.target.tagName!=='BUTTON')addCatalogSong(name,artist)};list.appendChild(el)});
 }
 $('freeSearch').addEventListener('input',renderFreeSongs);renderFreeSongs();
+$('addMiljacka').onclick=()=>addCatalogSong('Miljacka','Halid Bešlić');
 (async()=>{try{db=await openDB();tracks=await getAll();
 const onlineIds={karaoke:'-NUWp-4u6Ts',original:'PlTBOzsABKU'};
 function setOnlineMode(next){
